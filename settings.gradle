@@ -1,0 +1,4 @@
+rootProject.name = 'forge-server-jetty'
+
+include ':forge-server'
+project(':forge-server').projectDir=new File("$settingsDir/../forge-server")

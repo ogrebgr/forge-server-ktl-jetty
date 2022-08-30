@@ -1,0 +1,124 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+}
+
+ext {
+    forge_server_jetty_version = '20.0.0-alpha'
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+group = 'com.bolyartech.forge.server.jetty'
+version forge_server_jetty_version
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    api project(':forge-server')
+//    api 'com.bolyartech.forge:forge-server:20.0.0-beta'
+    api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = '1.8'
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = '1.8'
+}
+
+//tasks.withType(Javadoc).all {
+//    enabled = false
+//}
+
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+
+signing {
+    sign configurations.archives
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId 'com.bolyartech.forge.server'
+            artifactId 'forge-server-jetty'
+            version forge_server_jetty_version
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = 'Forge Server Jetty'
+                packaging = 'jar'
+                // optionally artifactId can be defined here
+                description = 'Jetty implementation of Forge Server'
+                url = 'https://github.com/ogrebgr/forge-server-jetty'
+
+                scm {
+                    connection = 'scm:git:https://github.com/ogrebgr/forge-server-jetty.git'
+                    developerConnection = 'scm:git:https://github.com/ogrebgr/forge-server-jetty.git'
+                    url = 'https://github.com/ogrebgr/forge-server-jetty'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ogremir'
+                        name = 'Ognyan Bankov'
+                        email = 'bankov@bolyartech.com'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "ossrh"
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = findProperty('ossrhUsername')
+                password = findProperty('ossrhPassword')
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+
+archivesBaseName = "forge-server-jetty"
