@@ -21,6 +21,7 @@ repositories {
 dependencies {
     api project(':forge-server')
 //    api 'com.bolyartech.forge:forge-server:20.0.0-beta'
+
     api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'

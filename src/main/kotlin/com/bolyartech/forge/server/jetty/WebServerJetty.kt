@@ -1,35 +1,66 @@
 package com.bolyartech.forge.server.jetty
 
+import com.bolyartech.forge.server.AbstractForgeServer
+import com.bolyartech.forge.server.ForgeSystemServlet
+import com.bolyartech.forge.server.WebServer
+import com.bolyartech.forge.server.module.SiteModule
+import com.bolyartech.forge.server.module.SiteModuleRegisterImpl
+import com.bolyartech.forge.server.route.RouteRegisterImpl
+import com.mchange.v2.c3p0.ComboPooledDataSource
 import jakarta.servlet.MultipartConfigElement
-import jakarta.servlet.http.HttpServlet
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
-import org.eclipse.jetty.server.session.SessionDataStoreFactory
+import org.eclipse.jetty.server.session.DatabaseAdaptor
+import org.eclipse.jetty.server.session.JDBCSessionDataStore
+import org.eclipse.jetty.server.session.JDBCSessionDataStoreFactory
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.FileSystem
 
-class ForgeJetty(
-    private val forgeJettyConfiguration: ForgeJettyConfiguration,
-    private val forgeSystemServlet: HttpServlet,
-    private val sessionDataStoreFactory: SessionDataStoreFactory?
-) {
+class WebServerJetty(
+    private val fs: FileSystem,
+    private val forgeConfig: AbstractForgeServer.ConfigurationPack,
+    private val dbDataSource: ComboPooledDataSource,
+    private val siteModules: List<SiteModule>
+) : WebServer {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var server: Server? = null
 
 
     @Synchronized
-    fun start() {
+    override fun start() {
+        val forgeJettyConfiguration = ForgeJettyConfigurationLoaderFile(forgeConfig.configurationDirectory).load()
+
+        val forgeSystemServlet = ForgeSystemServlet(
+            siteModules,
+            SiteModuleRegisterImpl(
+                RouteRegisterImpl(
+                    forgeConfig.forgeServerConfiguration.isPathInfoEnabled,
+                    forgeConfig.forgeServerConfiguration.maxSlashesInPathInfo
+                )
+            ),
+        )
+
+        val dba = DatabaseAdaptor()
+        dba.datasource = dbDataSource
+        val sessionDataStoreFactory = JDBCSessionDataStoreFactory()
+        dba.datasource.connection.use {
+            val tableData = JDBCSessionDataStore.SessionTableSchema()
+            tableData.schemaName = it.schema
+            tableData.catalogName = it.catalog
+            sessionDataStoreFactory.setSessionTableSchema(tableData)
+        }
+        sessionDataStoreFactory.setDatabaseAdaptor(dba)
+
         server = Server()
 
         setConnectors(server!!, forgeJettyConfiguration)
-        if (sessionDataStoreFactory != null) {
-            server!!.addBean(sessionDataStoreFactory)
-        }
+        server!!.addBean(sessionDataStoreFactory)
 
         val context = ServletContextHandler(ServletContextHandler.SESSIONS)
         context.sessionHandler.maxInactiveInterval = forgeJettyConfiguration.sessionTimeout
@@ -62,7 +93,7 @@ class ForgeJetty(
     }
 
     @Synchronized
-    fun stop() {
+    override fun stop() {
         if (server != null) {
             try {
                 server!!.stop()
