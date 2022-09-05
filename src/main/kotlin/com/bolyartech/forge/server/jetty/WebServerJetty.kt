@@ -1,6 +1,6 @@
 package com.bolyartech.forge.server.jetty
 
-import com.bolyartech.forge.server.AbstractForgeServer
+import com.bolyartech.forge.server.ForgeServer
 import com.bolyartech.forge.server.ForgeSystemServlet
 import com.bolyartech.forge.server.WebServer
 import com.bolyartech.forge.server.module.SiteModule
@@ -19,11 +19,9 @@ import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.FileSystem
 
 class WebServerJetty(
-    private val fs: FileSystem,
-    private val forgeConfig: AbstractForgeServer.ConfigurationPack,
+    private val forgeConfig: ForgeServer.ConfigurationPack,
     private val dbDataSource: ComboPooledDataSource,
     private val siteModules: List<SiteModule>
 ) : WebServer {
@@ -54,6 +52,10 @@ class WebServerJetty(
             tableData.schemaName = it.schema
             tableData.catalogName = it.catalog
             sessionDataStoreFactory.setSessionTableSchema(tableData)
+
+            val sql = "SELECT * FROM jettysessions"
+            val ps = it.prepareStatement(sql)
+            ps.execute()
         }
         sessionDataStoreFactory.setDatabaseAdaptor(dba)
 
