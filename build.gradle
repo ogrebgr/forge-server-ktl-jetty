@@ -4,13 +4,13 @@ plugins {
 }
 
 ext {
-    forge_server_jetty_version = '20.0.0-alpha'
+    forge_server_jetty_version = '20.0.0-alpha10'
 }
 
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-group = 'com.bolyartech.forge.server.jetty'
+group = 'com.bolyartech.forge.server'
 version forge_server_jetty_version
 
 repositories {
@@ -19,8 +19,8 @@ repositories {
 }
 
 dependencies {
-    api project(':forge-server')
-//    api 'com.bolyartech.forge:forge-server:20.0.0-beta'
+//    api project(':forge-server')
+    api 'com.bolyartech.forge.server:forge-server:20.0.0-alpha10'
 
     api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
 

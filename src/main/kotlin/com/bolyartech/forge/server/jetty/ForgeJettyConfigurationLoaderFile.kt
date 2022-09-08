@@ -11,7 +11,6 @@ class ForgeJettyConfigurationLoaderFile(private val configDirPath: Path) : Forge
     companion object {
         private const val JETTY_CONF_FILE = "jetty.conf"
 
-        private const val PROP_SERVER_NAMES = "server_names"
         private const val PROP_HOST = "host"
         private const val PROP_HTTP_PORT = "http_port"
         private const val PROP_HTTPS_PORT = "https_port"
@@ -37,17 +36,8 @@ class ForgeJettyConfigurationLoaderFile(private val configDirPath: Path) : Forge
             prop.load(it)
         }
 
-        val serverNamesTmp = prop.getProperty(PROP_SERVER_NAMES)
-
-        val serverNames = if (serverNamesTmp != null && serverNamesTmp.trim().isNotEmpty()) {
-            serverNamesTmp.split(",").map { it.trim() }
-        } else {
-            emptyList<String>()
-        }
-
 
         return ForgeJettyConfiguration(
-            serverNames,
             prop.getProperty(PROP_HOST),
             prop.getProperty(PROP_HTTP_PORT).toInt(),
             prop.getProperty(PROP_HTTPS_PORT).toInt(),

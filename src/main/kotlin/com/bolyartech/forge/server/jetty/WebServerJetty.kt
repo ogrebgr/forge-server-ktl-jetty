@@ -35,6 +35,7 @@ class WebServerJetty(
         val forgeJettyConfiguration = ForgeJettyConfigurationLoaderFile(forgeConfig.configurationDirectory).load()
 
         val forgeSystemServlet = ForgeSystemServlet(
+            forgeConfig.forgeServerConfiguration.serverNames,
             siteModules,
             SiteModuleRegisterImpl(
                 RouteRegisterImpl(
