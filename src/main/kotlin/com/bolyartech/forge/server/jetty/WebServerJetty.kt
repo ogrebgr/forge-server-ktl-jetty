@@ -84,7 +84,6 @@ class WebServerJetty(
         server!!.handler = context
         try {
             server!!.start()
-            server!!.join()
         } catch (e: Exception) {
             logger.error("Error starting the server: ", e)
             try {
