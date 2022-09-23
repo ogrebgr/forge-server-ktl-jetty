@@ -19,8 +19,8 @@ repositories {
 }
 
 dependencies {
-//    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:20.0.0-alpha10'
+    api project(':forge-server')
+//    api 'com.bolyartech.forge.server:forge-server:20.0.0-alpha10'
 
     api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
 
