@@ -3,6 +3,7 @@ package com.bolyartech.forge.server.jetty
 import com.bolyartech.forge.server.ForgeServer
 import com.bolyartech.forge.server.ForgeSystemServlet
 import com.bolyartech.forge.server.WebServer
+import com.bolyartech.forge.server.config.ForgeConfigurationException
 import com.bolyartech.forge.server.module.SiteModule
 import com.bolyartech.forge.server.module.SiteModuleRegisterImpl
 import com.bolyartech.forge.server.route.RouteRegisterImpl
@@ -32,7 +33,12 @@ class WebServerJetty(
 
     @Synchronized
     override fun start() {
-        val forgeJettyConfiguration = ForgeJettyConfigurationLoaderFile(forgeConfig.configurationDirectory).load()
+        val forgeJettyConfiguration = try {
+            ForgeJettyConfigurationLoaderFile(forgeConfig.configurationDirectory).load()
+        } catch (e: ForgeConfigurationException) {
+            logger.error("jetty.conf error: ${e.message}")
+            return
+        }
 
         val forgeSystemServlet = ForgeSystemServlet(
             forgeConfig.forgeServerConfiguration.serverNames,
@@ -43,6 +49,8 @@ class WebServerJetty(
                     forgeConfig.forgeServerConfiguration.maxSlashesInPathInfo
                 )
             ),
+            forceHttps = forgeJettyConfiguration.forceHttps,
+            httpsPort = forgeJettyConfiguration.httpsPort
         )
 
         val dba = DatabaseAdaptor()

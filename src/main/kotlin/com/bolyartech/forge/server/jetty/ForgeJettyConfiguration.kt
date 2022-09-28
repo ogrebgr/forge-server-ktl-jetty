@@ -4,6 +4,7 @@ data class ForgeJettyConfiguration(
     val host: String,
     val httpPort: Int,
     val httpsPort: Int,
+    val forceHttps: Boolean,
     val temporaryDirectory: String,
     val sessionTimeout: Int,
     val maxRequestSize: Int,
