@@ -2,6 +2,7 @@ package com.bolyartech.forge.server.jetty
 
 import com.bolyartech.forge.server.ForgeServer
 import com.bolyartech.forge.server.ForgeSystemServlet
+import com.bolyartech.forge.server.ForgeSystemServlet.Companion.SESSION_COOKIE_NAME
 import com.bolyartech.forge.server.WebServer
 import com.bolyartech.forge.server.config.ForgeConfigurationException
 import com.bolyartech.forge.server.module.SiteModule
@@ -29,7 +30,6 @@ class WebServerJetty(
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var server: Server? = null
-
 
     @Synchronized
     override fun start() {
@@ -89,6 +89,7 @@ class WebServerJetty(
             )
         )
         context.addServlet(holder, "/*")
+        context.sessionHandler.sessionCookieConfig.name = SESSION_COOKIE_NAME
         server!!.handler = context
         try {
             server!!.start()
