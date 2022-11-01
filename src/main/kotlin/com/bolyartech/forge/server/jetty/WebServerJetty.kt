@@ -2,7 +2,7 @@ package com.bolyartech.forge.server.jetty
 
 import com.bolyartech.forge.server.ForgeServer
 import com.bolyartech.forge.server.ForgeSystemServlet
-import com.bolyartech.forge.server.ForgeSystemServlet.Companion.SESSION_COOKIE_NAME
+import com.bolyartech.forge.server.ForgeSystemServlet.Companion.DEFAULT_SESSION_COOKIE_NAME
 import com.bolyartech.forge.server.WebServer
 import com.bolyartech.forge.server.config.ForgeConfigurationException
 import com.bolyartech.forge.server.module.SiteModule
@@ -89,7 +89,7 @@ class WebServerJetty(
             )
         )
         context.addServlet(holder, "/*")
-        context.sessionHandler.sessionCookieConfig.name = SESSION_COOKIE_NAME
+        context.sessionHandler.sessionCookieConfig.name = DEFAULT_SESSION_COOKIE_NAME
         server!!.handler = context
         try {
             server!!.start()
