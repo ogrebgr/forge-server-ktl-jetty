@@ -5,6 +5,7 @@ import com.bolyartech.forge.server.ForgeSystemServlet
 import com.bolyartech.forge.server.ForgeSystemServlet.Companion.DEFAULT_SESSION_COOKIE_NAME
 import com.bolyartech.forge.server.WebServer
 import com.bolyartech.forge.server.config.ForgeConfigurationException
+import com.bolyartech.forge.server.handler.RouteHandler
 import com.bolyartech.forge.server.module.SiteModule
 import com.bolyartech.forge.server.module.SiteModuleRegisterImpl
 import com.bolyartech.forge.server.route.RouteRegisterImpl
@@ -25,7 +26,9 @@ import java.io.File
 class WebServerJetty(
     private val forgeConfig: ForgeServer.ConfigurationPack,
     private val dbDataSource: ComboPooledDataSource,
-    private val siteModules: List<SiteModule>
+    private val siteModules: List<SiteModule>,
+    private val notFoundHandler: RouteHandler? = null,
+    private val internalServerErrorHandler: RouteHandler? = null,
 ) : WebServer {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -50,7 +53,9 @@ class WebServerJetty(
                 )
             ),
             forceHttps = forgeJettyConfiguration.forceHttps,
-            httpsPort = forgeJettyConfiguration.httpsPort
+            httpsPort = forgeJettyConfiguration.httpsPort,
+            notFoundHandler,
+            internalServerErrorHandler
         )
 
         val dba = DatabaseAdaptor()
