@@ -17,6 +17,7 @@ import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.server.session.DatabaseAdaptor
 import org.eclipse.jetty.server.session.JDBCSessionDataStore
 import org.eclipse.jetty.server.session.JDBCSessionDataStoreFactory
+import org.eclipse.jetty.server.session.SessionDataStoreFactory
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.util.ssl.SslContextFactory
@@ -25,10 +26,10 @@ import java.io.File
 
 class WebServerJetty(
     private val forgeConfig: ForgeServer.ConfigurationPack,
-    private val dbDataSource: ComboPooledDataSource,
     private val siteModules: List<SiteModule>,
     private val notFoundHandler: RouteHandler? = null,
     private val internalServerErrorHandler: RouteHandler? = null,
+    private val sessionDataStoreFactory: SessionDataStoreFactory? = null,
 ) : WebServer {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -58,25 +59,12 @@ class WebServerJetty(
             internalServerErrorHandler
         )
 
-        val dba = DatabaseAdaptor()
-        dba.datasource = dbDataSource
-        val sessionDataStoreFactory = JDBCSessionDataStoreFactory()
-        dba.datasource.connection.use {
-            val tableData = JDBCSessionDataStore.SessionTableSchema()
-            tableData.schemaName = it.schema
-            tableData.catalogName = it.catalog
-            sessionDataStoreFactory.setSessionTableSchema(tableData)
-
-            val sql = "SELECT * FROM jettysessions"
-            val ps = it.prepareStatement(sql)
-            ps.execute()
-        }
-        sessionDataStoreFactory.setDatabaseAdaptor(dba)
-
         server = Server()
 
         setConnectors(server!!, forgeJettyConfiguration)
-        server!!.addBean(sessionDataStoreFactory)
+        if (sessionDataStoreFactory != null) {
+            server!!.addBean(sessionDataStoreFactory)
+        }
 
         val context = ServletContextHandler(ServletContextHandler.SESSIONS)
         context.sessionHandler.maxInactiveInterval = forgeJettyConfiguration.sessionTimeout
@@ -148,5 +136,26 @@ class WebServerJetty(
         }
 
         this.server!!.connectors = connectors.toTypedArray()
+    }
+
+    companion object {
+        fun createDbSessionDataStoreFactory(dbDataSource: ComboPooledDataSource) : SessionDataStoreFactory {
+            val dba = DatabaseAdaptor()
+            dba.datasource = dbDataSource
+            val sessionDataStoreFactoryVal = JDBCSessionDataStoreFactory()
+            dba.datasource.connection.use {
+                val tableData = JDBCSessionDataStore.SessionTableSchema()
+                tableData.schemaName = it.schema
+                tableData.catalogName = it.catalog
+                sessionDataStoreFactoryVal.setSessionTableSchema(tableData)
+
+                val sql = "SELECT * FROM jettysessions"
+                val ps = it.prepareStatement(sql)
+                ps.execute()
+            }
+            sessionDataStoreFactoryVal.setDatabaseAdaptor(dba)
+
+            return sessionDataStoreFactoryVal
+        }
     }
 }
