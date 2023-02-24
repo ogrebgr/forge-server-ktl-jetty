@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-    forge_server_jetty_version = '20.0.0-alpha20'
+    forge_server_jetty_version = '21.0.0-alpha1'
 }
 
 apply plugin: 'maven-publish'
@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
 //    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:20.0.0-alpha10'
+    api 'com.bolyartech.forge.server:forge-server:21.0.0-alpha1'
 
     api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
 

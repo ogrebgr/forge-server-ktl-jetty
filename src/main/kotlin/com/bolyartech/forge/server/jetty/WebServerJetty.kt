@@ -9,7 +9,6 @@ import com.bolyartech.forge.server.handler.RouteHandler
 import com.bolyartech.forge.server.module.SiteModule
 import com.bolyartech.forge.server.module.SiteModuleRegisterImpl
 import com.bolyartech.forge.server.route.RouteRegisterImpl
-import com.mchange.v2.c3p0.ComboPooledDataSource
 import jakarta.servlet.MultipartConfigElement
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Server
@@ -23,6 +22,7 @@ import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.slf4j.LoggerFactory
 import java.io.File
+import javax.sql.DataSource
 
 class WebServerJetty(
     private val forgeConfig: ForgeServer.ConfigurationPack,
@@ -139,7 +139,7 @@ class WebServerJetty(
     }
 
     companion object {
-        fun createDbSessionDataStoreFactory(dbDataSource: ComboPooledDataSource) : SessionDataStoreFactory {
+        fun createDbSessionDataStoreFactory(dbDataSource: DataSource) : SessionDataStoreFactory {
             val dba = DatabaseAdaptor()
             dba.datasource = dbDataSource
             val sessionDataStoreFactoryVal = JDBCSessionDataStoreFactory()
