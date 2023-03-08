@@ -12,4 +12,7 @@ data class ForgeJettyConfiguration(
     val fileSizeThreshold: Int,
     val keyStorePath: String,
     val keyStorePassword: String,
+    val maxThreads: Int,
+    val minThreads: Int,
+    val maxThreadPoolQueueSize: Int,
 )

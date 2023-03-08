@@ -4,6 +4,7 @@ import com.bolyartech.forge.server.ForgeServer
 import com.bolyartech.forge.server.ForgeSystemServlet
 import com.bolyartech.forge.server.ForgeSystemServlet.Companion.DEFAULT_SESSION_COOKIE_NAME
 import com.bolyartech.forge.server.WebServer
+import com.bolyartech.forge.server.WebServerInstrumentationReader
 import com.bolyartech.forge.server.config.ForgeConfigurationException
 import com.bolyartech.forge.server.handler.RouteHandler
 import com.bolyartech.forge.server.module.SiteModule
@@ -19,7 +20,9 @@ import org.eclipse.jetty.server.session.JDBCSessionDataStoreFactory
 import org.eclipse.jetty.server.session.SessionDataStoreFactory
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
+import org.eclipse.jetty.util.BlockingArrayQueue
 import org.eclipse.jetty.util.ssl.SslContextFactory
+import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
 import java.io.File
 import javax.sql.DataSource
@@ -30,10 +33,11 @@ class WebServerJetty(
     private val notFoundHandler: RouteHandler? = null,
     private val internalServerErrorHandler: RouteHandler? = null,
     private val sessionDataStoreFactory: SessionDataStoreFactory? = null,
-) : WebServer {
+) : WebServer, WebServerInstrumentationReader {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
     private var server: Server? = null
+    private var threadPool: QueuedThreadPool? = null
 
     @Synchronized
     override fun start() {
@@ -59,7 +63,25 @@ class WebServerJetty(
             internalServerErrorHandler
         )
 
-        server = Server()
+        server = if (forgeJettyConfiguration.maxThreads > 0) {
+            threadPool = if (forgeJettyConfiguration.minThreads > 0) {
+                if (forgeJettyConfiguration.maxThreadPoolQueueSize > 0) {
+                    val q = BlockingArrayQueue<Runnable>(forgeJettyConfiguration.maxThreadPoolQueueSize)
+                    QueuedThreadPool(forgeJettyConfiguration.maxThreads, forgeJettyConfiguration.minThreads, q)
+                } else {
+                    QueuedThreadPool(forgeJettyConfiguration.maxThreads, forgeJettyConfiguration.minThreads)
+                }
+            } else {
+                QueuedThreadPool(forgeJettyConfiguration.maxThreads)
+            }
+            logger.info("Jetty settings: max threads: ${threadPool!!.maxThreads}, min threads: ${threadPool!!.minThreads}, max queue size: ${forgeJettyConfiguration.maxThreadPoolQueueSize}")
+            Server(threadPool)
+        } else {
+            logger.info("Jetty settings: default")
+            Server()
+        }
+
+
 
         setConnectors(server!!, forgeJettyConfiguration)
         if (sessionDataStoreFactory != null) {
@@ -158,4 +180,21 @@ class WebServerJetty(
             return sessionDataStoreFactoryVal
         }
     }
+
+    override fun getInstrumentation(): WebServerInstrumentationReader {
+        return this
+    }
+
+    override fun getQueueSize(): Int {
+        return threadPool?.queueSize ?: -1
+    }
+
+    override fun getReadyThreads(): Int {
+        return threadPool?.readyThreads ?: -1
+    }
+
+    override fun getUtilizationRate(): Double {
+        return threadPool?.utilizationRate ?: -1.0
+    }
+
 }

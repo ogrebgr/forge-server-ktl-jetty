@@ -26,6 +26,9 @@ class ForgeJettyConfigurationLoaderFile(private val configDirPath: Path) : Forge
         private const val PROP_FILE_THRESHOLD_SIZE = "file_size_threshold"
         private const val PROP_KEYSTORE_PATH = "keystore_path"
         private const val PROP_KEYSTORE_PASSWORD = "keystore_password"
+        private const val PROP_MAX_THREADS = "max_threads"
+        private const val PROP_MIN_THREADS = "min_threads"
+        private const val PROP_MAX_THREAD_POOL_QUEUE_SIZE = "max_thread_pool_queue_size"
 //        private const val PROP_TRUSTSTORE_PATH = "truststore_path"
 //        private const val PROP_TRUSTSTORE_PASSWORD = "truststore_password"
     }
@@ -64,6 +67,9 @@ class ForgeJettyConfigurationLoaderFile(private val configDirPath: Path) : Forge
             extractIntValue0Positive(prop, PROP_FILE_THRESHOLD_SIZE),
             extractStringValue(prop, PROP_KEYSTORE_PATH),
             extractStringValue(prop, PROP_KEYSTORE_PASSWORD),
+            extractIntValue0Positive(prop, PROP_MAX_THREADS, 0),
+            extractIntValue0Positive(prop, PROP_MIN_THREADS, 0),
+            extractIntValue0Positive(prop, PROP_MAX_THREAD_POOL_QUEUE_SIZE, 0),
         )
     }
 }
