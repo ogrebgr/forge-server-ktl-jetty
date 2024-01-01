@@ -1,10 +1,10 @@
 plugins {
     id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
 }
 
 ext {
-    forge_server_jetty_version = '21.0.0-alpha1'
+    forge_server_jetty_version = '21.0.0'
 }
 
 apply plugin: 'maven-publish'
@@ -20,9 +20,9 @@ repositories {
 
 dependencies {
 //    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:21.0.0-alpha1'
+    api 'com.bolyartech.forge.server:forge-server:21.0.0'
 
-    api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.7'
+    api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.19'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
@@ -31,14 +31,9 @@ test {
     useJUnitPlatform()
 }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = '1.8'
+kotlin {
+    jvmToolchain(11)
 }
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = '1.8'
-}
-
 //tasks.withType(Javadoc).all {
 //    enabled = false
 //}
