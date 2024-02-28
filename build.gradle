@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-    forge_server_jetty_version = '21.0.0'
+    forge_server_jetty_version = '21.1.0'
 }
 
 apply plugin: 'maven-publish'
@@ -20,9 +20,10 @@ repositories {
 
 dependencies {
 //    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:21.0.0'
+    api 'com.bolyartech.forge.server:forge-server:21.1.0'
 
     api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.19'
+    api group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '11.0.19'
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
