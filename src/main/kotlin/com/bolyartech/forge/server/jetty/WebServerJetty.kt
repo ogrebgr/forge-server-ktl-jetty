@@ -104,11 +104,11 @@ class WebServerJetty(
             cors.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, forgeConfig.forgeServerConfiguration.accessControlAllowOrigin)
 
             if (!forgeConfig.forgeServerConfiguration.accessControlAllowMethods.isNullOrEmpty()) {
-                cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,POST,OPTIONS")
+                cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, forgeConfig.forgeServerConfiguration.accessControlAllowMethods)
             }
 
             if (!forgeConfig.forgeServerConfiguration.accessControlAllowHeaders.isNullOrEmpty()) {
-                cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Content-Type,Accept,Origin")
+                cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, forgeConfig.forgeServerConfiguration.accessControlAllowHeaders)
             }
         }
 
