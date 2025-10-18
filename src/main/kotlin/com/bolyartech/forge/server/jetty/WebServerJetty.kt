@@ -10,26 +10,23 @@ import com.bolyartech.forge.server.handler.RouteHandler
 import com.bolyartech.forge.server.module.SiteModule
 import com.bolyartech.forge.server.module.SiteModuleRegisterImpl
 import com.bolyartech.forge.server.route.RouteRegisterImpl
-import jakarta.servlet.DispatcherType
 import jakarta.servlet.MultipartConfigElement
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler
+import org.eclipse.jetty.ee10.servlet.ServletHolder
 import org.eclipse.jetty.server.Connector
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
-import org.eclipse.jetty.server.session.DatabaseAdaptor
-import org.eclipse.jetty.server.session.JDBCSessionDataStore
-import org.eclipse.jetty.server.session.JDBCSessionDataStoreFactory
-import org.eclipse.jetty.server.session.SessionDataStoreFactory
-import org.eclipse.jetty.servlet.FilterHolder
-import org.eclipse.jetty.servlet.ServletContextHandler
-import org.eclipse.jetty.servlet.ServletHolder
+import org.eclipse.jetty.server.handler.CrossOriginHandler
+import org.eclipse.jetty.session.DatabaseAdaptor
+import org.eclipse.jetty.session.JDBCSessionDataStore
+import org.eclipse.jetty.session.JDBCSessionDataStoreFactory
+import org.eclipse.jetty.session.SessionDataStoreFactory
 import org.eclipse.jetty.util.BlockingArrayQueue
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.*
 import javax.sql.DataSource
-import org.eclipse.jetty.servlets.CrossOriginFilter
 
 
 class WebServerJetty(
@@ -98,20 +95,6 @@ class WebServerJetty(
         context.maxFormContentSize = forgeJettyConfiguration.maxRequestSize
         context.contextPath = "/"
 
-        if (!forgeConfig.forgeServerConfiguration.accessControlAllowOrigin.isNullOrEmpty()) {
-            val cors: FilterHolder = context.addFilter(CrossOriginFilter::class.java, "/*", EnumSet.of(DispatcherType.REQUEST))
-            cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, forgeConfig.forgeServerConfiguration.accessControlAllowOrigin)
-            cors.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, forgeConfig.forgeServerConfiguration.accessControlAllowOrigin)
-
-            if (!forgeConfig.forgeServerConfiguration.accessControlAllowMethods.isNullOrEmpty()) {
-                cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, forgeConfig.forgeServerConfiguration.accessControlAllowMethods)
-            }
-
-            if (!forgeConfig.forgeServerConfiguration.accessControlAllowHeaders.isNullOrEmpty()) {
-                cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, forgeConfig.forgeServerConfiguration.accessControlAllowHeaders)
-            }
-        }
-
         val holder = ServletHolder(forgeSystemServlet)
         logger.info("Session timeout set to {} seconds", forgeJettyConfiguration.sessionTimeout)
         holder.registration.setMultipartConfig(
@@ -124,7 +107,25 @@ class WebServerJetty(
         )
         context.addServlet(holder, "/*")
         context.sessionHandler.sessionCookieConfig.name = DEFAULT_SESSION_COOKIE_NAME
-        server!!.handler = context
+
+        if (!forgeConfig.forgeServerConfiguration.accessControlAllowOrigin.isNullOrEmpty()) {
+            val crossOriginHandler = CrossOriginHandler()
+            crossOriginHandler.allowedOriginPatterns =
+                forgeConfig.forgeServerConfiguration.accessControlAllowOrigin!!.split(",").map { it.trim() }.toSet()
+            if (!forgeConfig.forgeServerConfiguration.accessControlAllowOrigin.isNullOrEmpty()) {
+                crossOriginHandler.allowedHeaders =
+                    forgeConfig.forgeServerConfiguration.accessControlAllowOrigin!!.split(",").map { it.trim() }.toSet()
+            }
+            if (!forgeConfig.forgeServerConfiguration.accessControlAllowMethods.isNullOrEmpty()) {
+                crossOriginHandler.allowedMethods =
+                    forgeConfig.forgeServerConfiguration.accessControlAllowMethods!!.split(",").map { it.trim() }.toSet()
+            }
+            crossOriginHandler.handler = context
+            server!!.handler = crossOriginHandler
+        } else {
+            server!!.handler = context
+        }
+
         try {
             server!!.start()
         } catch (e: Exception) {
@@ -180,7 +181,7 @@ class WebServerJetty(
     }
 
     companion object {
-        fun createDbSessionDataStoreFactory(dbDataSource: DataSource) : SessionDataStoreFactory {
+        fun createDbSessionDataStoreFactory(dbDataSource: DataSource): SessionDataStoreFactory {
             val dba = DatabaseAdaptor()
             dba.datasource = dbDataSource
             val sessionDataStoreFactoryVal = JDBCSessionDataStoreFactory()
@@ -209,7 +210,7 @@ class WebServerJetty(
     }
 
     override fun getReadyThreads(): Int {
-        return threadPool?.readyThreads ?: -1
+        return 0
     }
 
     override fun getUtilizationRate(): Double {

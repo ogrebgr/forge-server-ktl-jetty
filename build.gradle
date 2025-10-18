@@ -1,14 +1,15 @@
 plugins {
     id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.23'
+    id "signing"
+//    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 ext {
-    forge_server_jetty_version = '21.3.1'
+    forge_server_jetty_version = '21.3.3'
 }
 
 apply plugin: 'maven-publish'
-apply plugin: 'signing'
 
 group = 'com.bolyartech.forge.server'
 version forge_server_jetty_version
@@ -18,12 +19,14 @@ repositories {
     mavenLocal()
 }
 
-dependencies {
-//    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:21.3.1'
+ext.jettyVersion = '12.1.2'
 
-    api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '11.0.19'
-    api group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '11.0.19'
+dependencies {
+    api project(':forge-server')
+//    api 'com.bolyartech.forge.server:forge-server:21.3.3'
+    api "org.eclipse.jetty.ee10:jetty-ee10-webapp:$jettyVersion"
+    api "org.eclipse.jetty.ee10:jetty-ee10-servlet:$jettyVersion"
+    api "org.eclipse.jetty.ee10:jetty-ee10-servlets:$jettyVersion"
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
@@ -32,12 +35,10 @@ test {
     useJUnitPlatform()
 }
 
-kotlin {
-    jvmToolchain(11)
+
+tasks.withType(Javadoc).all {
+    enabled = false
 }
-//tasks.withType(Javadoc).all {
-//    enabled = false
-//}
 
 
 task javadocJar(type: Jar) {
@@ -52,11 +53,6 @@ task sourcesJar(type: Jar) {
 
 artifacts {
     archives javadocJar, sourcesJar
-}
-
-
-signing {
-    sign configurations.archives
 }
 
 
@@ -100,22 +96,24 @@ publishing {
             }
         }
     }
-
-    repositories {
-        maven {
-            name = "ossrh"
-            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials {
-                username = findProperty('ossrhUsername')
-                password = findProperty('ossrhPassword')
-            }
-        }
-    }
 }
+
+//nexusPublishing {
+//    repositories {
+//        sonatype {
+//            stagingProfileId.set("com.bolyartech")
+//            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+//            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+//            username = findProperty('ossrhUsername')
+//            password = findProperty('ossrhPassword')
+//        }
+//    }
+//}
 
 signing {
     sign publishing.publications.mavenJava
 }
 
-
-archivesBaseName = "forge-server-jetty"
+kotlin {
+    jvmToolchain(17)
+}
