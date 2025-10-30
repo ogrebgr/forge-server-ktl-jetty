@@ -2,11 +2,11 @@ plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '1.9.23'
     id "signing"
-//    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 ext {
-    forge_server_jetty_version = '21.3.3'
+    forge_server_jetty_version = '22.0.0'
 }
 
 apply plugin: 'maven-publish'
@@ -16,14 +16,14 @@ version forge_server_jetty_version
 
 repositories {
     mavenCentral()
-    mavenLocal()
+//    mavenLocal()
 }
 
 ext.jettyVersion = '12.1.2'
 
 dependencies {
-    api project(':forge-server')
-//    api 'com.bolyartech.forge.server:forge-server:21.3.3'
+//    api project(':forge-server')
+    api 'com.bolyartech.forge.server:forge-server:22.0.0'
     api "org.eclipse.jetty.ee10:jetty-ee10-webapp:$jettyVersion"
     api "org.eclipse.jetty.ee10:jetty-ee10-servlet:$jettyVersion"
     api "org.eclipse.jetty.ee10:jetty-ee10-servlets:$jettyVersion"
@@ -98,17 +98,17 @@ publishing {
     }
 }
 
-//nexusPublishing {
-//    repositories {
-//        sonatype {
-//            stagingProfileId.set("com.bolyartech")
-//            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
-//            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
-//            username = findProperty('ossrhUsername')
-//            password = findProperty('ossrhPassword')
-//        }
-//    }
-//}
+nexusPublishing {
+    repositories {
+        sonatype {
+            stagingProfileId.set("com.bolyartech")
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+            username = findProperty('ossrhUsername')
+            password = findProperty('ossrhPassword')
+        }
+    }
+}
 
 signing {
     sign publishing.publications.mavenJava
