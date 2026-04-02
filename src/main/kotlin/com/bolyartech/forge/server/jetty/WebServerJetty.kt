@@ -42,23 +42,18 @@ class WebServerJetty(
     private var threadPool: QueuedThreadPool? = null
 
     @Synchronized
-    override fun start() {
+    override fun start(): Boolean {
         val forgeJettyConfiguration = try {
             ForgeJettyConfigurationLoaderFile(forgeConfig.configurationDirectory).load()
         } catch (e: ForgeConfigurationException) {
             logger.error("jetty.conf error: ${e.message}")
-            return
+            return false
         }
 
         val forgeSystemServlet = ForgeSystemServlet(
             forgeConfig.forgeServerConfiguration.serverNames,
             siteModules,
-            SiteModuleRegisterImpl(
-                RouteRegisterImpl(
-                    forgeConfig.forgeServerConfiguration.isPathInfoEnabled,
-                    forgeConfig.forgeServerConfiguration.maxSlashesInPathInfo
-                )
-            ),
+            SiteModuleRegisterImpl(RouteRegisterImpl()),
             forceHttps = forgeJettyConfiguration.forceHttps,
             httpsPort = forgeJettyConfiguration.httpsPort,
             notFoundHandler,
@@ -126,16 +121,24 @@ class WebServerJetty(
             server!!.handler = context
         }
 
-        try {
+
+        val startResult = try {
+            server!!.stopAtShutdown = true
             server!!.start()
+            true
         } catch (e: Exception) {
-            logger.error("Error starting the server: ", e)
+            logger.error("Error starting the server: ${e.message}")
+            logger.trace("Error:", e)
             try {
                 server!!.stop()
             } catch (e: Exception) {
+                logger.error("Error stopping the server: ", e)
                 //suppress
             }
+            false
         }
+
+        return startResult
     }
 
     @Synchronized
@@ -168,7 +171,7 @@ class WebServerJetty(
             val sslContextFactory = SslContextFactory.Server()
             sslContextFactory.keyStorePath = conf.keyStorePath
             if (!conf.keyStorePassword.isEmpty()) {
-                sslContextFactory.setKeyStorePassword(conf.keyStorePassword)
+                sslContextFactory.keyStorePassword = conf.keyStorePassword
             }
             val connector = ServerConnector(server, sslContextFactory)
             connector.host = conf.host
@@ -176,6 +179,10 @@ class WebServerJetty(
             connectors.add(connector)
             logger.info("Listening HTTPS on {}, port {}", conf.host, conf.httpsPort)
         }
+        forgeConfig.forgeServerConfiguration.serverNames.forEach { name ->
+            logger.info("Accepting for hostname: $name")
+        }
+
 
         this.server!!.connectors = connectors.toTypedArray()
     }
