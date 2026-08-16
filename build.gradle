@@ -6,7 +6,7 @@ plugins {
 }
 
 ext {
-    forge_server_jetty_version = '24.0.0'
+    forge_server_jetty_version = '24.0.1'
 }
 
 apply plugin: 'maven-publish'
@@ -16,14 +16,14 @@ version forge_server_jetty_version
 
 repositories {
     mavenCentral()
-//    mavenLocal()
+    mavenLocal()
 }
 
 ext.jettyVersion = '12.1.7'
 
 dependencies {
 //    api project(':forge-server')
-    api 'com.bolyartech.forge.server:forge-server:24.0.0'
+    api 'com.bolyartech.forge.server:forge-server:24.0.1'
     api "org.eclipse.jetty.ee10:jetty-ee10-webapp:$jettyVersion"
     api "org.eclipse.jetty.ee10:jetty-ee10-servlet:$jettyVersion"
     api "org.eclipse.jetty.ee10:jetty-ee10-servlets:$jettyVersion"
